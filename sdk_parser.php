@@ -112,6 +112,9 @@ class SDKParser
 					$html = self::getFile($file);
 					$parser = phpQuery::newDocumentHTML($html);
 				}
+							
+				if(!file || !$parser)
+					continue;
 
 				$member_hint = array();
 				foreach ($parser->find("a#{$ref}")->next("div.memitem")->find('div.memdoc code') as $function) {
