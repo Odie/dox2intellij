@@ -1,0 +1,64 @@
+local REMOTE_URL = "<<<SDK_REMOTE_URL>>>"
+
+--- Quickhelp Documentation (ctrl-Q)
+-- This is called when the user invokes quick help via ctrl-q, or by
+-- having the quickhelp panel open and set to autolookup
+-- @param name The name to get documentation for.
+-- @return the documentation as an HTML or plain text string
+function getDocumentation(name)
+	local file = getDocumentationUrl(name)
+
+	-- any additional external help?
+	if not file then return getQuickNavigateDocumentation(name) end
+
+	-- try load remote file with additional help
+	html = fetchURL(file)
+	if not html then return end
+
+	local id = file:find("#")
+	if not id then return end
+
+	-- lookup for needed block
+	local start_pattern = [=[<a class=['"]anchor" id=['"]]=] .. file:sub(id + 1) .. [=[">(.-)<div class=['"]memitem['"]>]=]
+	local stop_pattern = [=[<div class=['"]memdoc['"]>(.-)</div>]=]
+
+	local start = html:find(start_pattern)
+	if start then
+		result = html:match(stop_pattern, start)
+		if not result then return end
+	end
+
+	-- lets make some cleanup
+	result = result:gsub([=[<a(.-)>(.-)</a>]=], "%2")
+	result = result:gsub([=[class=['"](.-)['"]]=], "")
+	result = [=[<html><h3>]=] .. name .. [=[</h3>]=] .. result .. [=[<br/><br/>[ <b>information provided by <<<SDK_TITLE>>> </b> <a href="]=] .. REMOTE_URL .. [=[">]=] .. REMOTE_URL .. [=[</a> ]</html>]=]
+	return result
+end
+
+--- External Documentation URL (shift-F1)
+-- This is called by shift-F1 on the symbol, or by the
+-- external documentation button on the quick help panel
+-- @param name The name to get documentation for.
+-- @return the URL of the external documentation
+function getDocumentationUrl(name)
+	local sig = SIGNATURES[name]
+	if not sig then return end
+	if type(sig) == "table" then
+		return REMOTE_URL .. sig[2]
+	end
+end
+
+
+--- Quick Navigation Tooltip Text, (ctrl-hover on symbol)
+-- This is called when the user ctrl-hovers over a symbol
+-- @param name The name to get documentation for.
+-- @return the documentation as a plain text string
+function getQuickNavigateDocumentation(name)
+	local sig = SIGNATURES[name]
+	if not sig then return end
+	if type(sig) == "table" then
+		sig = sig[1]
+	end
+
+	return "[<<<SDK_TITLE>>>]\r\n " .. sig
+end
