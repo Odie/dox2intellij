@@ -100,7 +100,15 @@ class SDKParser
 		}
 
 		//get list hints for members
+		$itemsToProcess = sizeof($index);
+		$itemsProcessed = 0;
+		
 		foreach ($index as $class_name => $class_info) {
+			{
+				print("Processing: $itemsProcessed/$itemsToProcess\r");
+				$itemsProcessed++;
+			}
+			
 			if (!isset($class_info['member']))
 				continue;
 
@@ -125,6 +133,7 @@ class SDKParser
 				$index[$class_name]['member'][$member_name]['hint'] = implode(' OR ', $member_hint);
 			}
 		}
+		print("Done!                  \n");
 
 		return $index;
 	}
